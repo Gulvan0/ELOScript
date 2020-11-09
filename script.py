@@ -80,6 +80,8 @@ def set_matchup(p1, p2, w, l, d):
   data[p2]["matchups"][p1] = m2
   with open("data.json", "w") as f:
     json.dump(data, f)
+  with open("rating.txt", "w") as f:
+    f.write(output())
   print("Matchups updated!")
 
 def update_matchup(p1, p2, outcome):
