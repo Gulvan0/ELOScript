@@ -2,11 +2,14 @@ import math
 import json
 from tabulate import tabulate
 
-table_headers = ("#", "Player", "Rating", "Games", "Wins", "Losses", "Draws")
+table_headers = ("#", "Player", "Rating", "Games", "Wins", "Losses", "Draws", "Score vs next")
 data = {}
 
+def new_matchup():
+  return {"w": 0, "l": 0, "d": 0}
+
 def new_player():
-  return {"rating": 1500, "wins": 0, "losses": 0, "draws": 0}
+  return {"rating": 1500, "wins": 0, "losses": 0, "draws": 0, "matchups": {}}
 
 def calc_total(player):
   return player["wins"] + player["losses"] + player["draws"]
@@ -32,7 +35,69 @@ def output():
   for ind, r in enumerate(rows):
     r.insert(0, ind+1)
     r[2] = write_rating(r[2], r[3])
+    if ind < len(rows) - 1:
+      m1, _ = get_matchups(r[1], rows[ind+1][0])
+      r.append(calc_score(m1["w"], m1["l"], m1["d"]))
+    else:
+      r.append("-")
   return tabulate(rows, headers = table_headers)
+
+def calc_score(wins, loses, draws):
+  return str(wins+draws/2)+"-"+str(loses+draws/2)
+
+def print_matchups(player):
+  stats = data.get(player)
+  if stats == None:
+    print("Player " + player + " not found, aborting")
+    return 
+  rows = []
+  for (k, v) in stats["matchups"].items():
+    rows.append([k, calc_score(v["w"], v["l"], v["d"]) ,v["w"], v["l"], v["d"]])
+  print(tabulate(rows, ("Opponent", "Score", "Wins", "Losses", "Draws")))
+
+def get_matchups(p1, p2):
+  first = data[p1]
+  second = data[p2]
+  if first == None or second == None:
+    return (None, None)
+  if first["matchups"].get(p2) == None:
+    first["matchups"][p2] = new_matchup()
+  if second["matchups"].get(p1) == None:
+    second["matchups"][p1] = new_matchup()
+  data[p1] = first
+  data[p2] = second
+  return (first["matchups"][p2], second["matchups"][p1])
+
+def set_matchup(p1, p2, w, l, d):
+  m1, m2 = get_matchups(p1, p2)
+  if (m1, m2) == (None, None):
+    print("One of the players isn't found, aborting")
+    return
+  m1["w"] = m2["l"] = w
+  m1["l"] = m2["w"] = l
+  m1["d"] = m2["d"] = d
+  data[p1]["matchups"][p2] = m1
+  data[p2]["matchups"][p1] = m2
+  with open("data.json", "w") as f:
+    json.dump(data, f)
+  print("Matchups updated!")
+
+def update_matchup(p1, p2, outcome):
+  m1, m2 = get_matchups(p1, p2)
+  if (m1, m2) == (None, None):
+    print("One of the players isn't found, aborting")
+    return
+  if outcome == "w":
+    m1["w"] += 1
+    m2["l"] += 1
+  elif outcome == "l":
+    m1["l"] += 1
+    m2["w"] += 1
+  elif outcome == "d":
+    m1["d"] += 1
+    m2["d"] += 1
+  data[p1]["matchups"][p2] = m1
+  data[p2]["matchups"][p1] = m2
 
 with open("data.json", "r") as f:
   data = json.load(f)
@@ -42,6 +107,20 @@ while True:
 
   if inp[0] == "show":
     print(output())
+    continue
+
+  if inp[0] == "matchups":
+    if len(inp) != 2:
+      print("Usage: matchups player")
+    else:
+      print_matchups(inp[1].lower())
+    continue
+
+  if inp[0] == "setmatchups":
+    if len(inp) != 6:
+      print("Usage: setmatchups player1 player2 wins losses draws")
+    else:
+      set_matchup(inp[1].lower(), inp[2].lower(), int(inp[3]), int(inp[4]), int(inp[5]))
     continue
   
   if len(inp) != 3:
@@ -80,6 +159,7 @@ while True:
   second["rating"] += reward(second["rating"], first["rating"], secondSa, calc_total(second))
   data[firstName] = first
   data[secondName] = second
+  update_matchup(firstName, secondName, inp[2])
 
   with open("data.json", "w") as f:
     json.dump(data, f)
