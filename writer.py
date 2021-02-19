@@ -25,14 +25,15 @@ def _get_str_personal_score(wins, losses, draws):
 def _assemble_general_info(data):
   result = []
   for (name, playerdata) in data.items():
-    playerinfo = {}
-    playerinfo["name"] = name
-    playerinfo["rating"] = playerdata["rating"]
-    playerinfo["total_games_count"] = playerinfoutils.total_games(playerdata)
-    playerinfo["win_count"] = playerdata["wins"]
-    playerinfo["loss_count"] = playerdata["losses"]
-    playerinfo["draw_count"] = playerdata["draws"]
-    result.append(playerinfo)
+    if "hide" not in playerdata:
+      playerinfo = {}
+      playerinfo["name"] = name
+      playerinfo["rating"] = playerdata["rating"]
+      playerinfo["total_games_count"] = playerinfoutils.total_games(playerdata)
+      playerinfo["win_count"] = playerdata["wins"]
+      playerinfo["loss_count"] = playerdata["losses"]
+      playerinfo["draw_count"] = playerdata["draws"]
+      result.append(playerinfo)
   return result
 
 def _enumerate_info(info):

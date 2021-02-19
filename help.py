@@ -7,7 +7,9 @@ _commands = [
     {"cmd": "aftermatch", "usage": "aftermatch [player1] [player2] [w/l/d]", "arg_count": 3, "description": "Saves the match results (rating, stats, matchup)"},
     {"cmd": "remove", "usage": "remove [player]", "arg_count": 1, "description": "Removes the player from the database. Results of other players' matches against removed player are preserved"},
     {"cmd": "merge", "usage": "merge [departure_player] [destination_player]", "arg_count": 2, "description": "Appends one player's stats to another's and removes the former"},
-    {"cmd": "undo", "usage": "undo", "arg_count": 0, "description": "Removes the effects of the last command executed. Only one consequent undo is allowed"}
+    {"cmd": "undo", "usage": "undo", "arg_count": 0, "description": "Removes the effects of the last command executed. Only one consequent undo is allowed"},
+    {"cmd": "deactivate", "usage": "deactivate [player]", "arg_count": 1, "description": "Hides the player from the rating table. Useful when the player (temporary) leaves the league. Rating, stats, and matchups are preserved"},
+    {"cmd": "reactivate", "usage": "reactivate [player]", "arg_count": 1, "description": "Returns the player to the rating table"}
 ]
 
 def _find_cmd_info(cmd):

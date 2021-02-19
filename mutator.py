@@ -157,3 +157,19 @@ def merge_players(data, login_from, login_to):
   dump(data)
   print("Players merged: " + login_from + " -> " + login_to)
   return True
+
+def deactivate_player(data, login):
+  playerdata = data.get(login)
+  if playerdata == None:
+    print(login + " not found, cancelling")
+    return False
+  playerdata["hide"] = True
+  return True
+
+def reactivate_player(data, login):
+  playerdata = data.get(login)
+  if playerdata == None:
+    print(login + " not found, cancelling")
+    return False
+  playerdata.pop("hide", None)
+  return True
