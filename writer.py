@@ -13,9 +13,9 @@ def _export_filename():
     timestamp = timestamp.replace(":", "-")
     return "rating_" + timestamp + ".txt"
 
-def _get_str_rating(rating, total_games):
+def _get_str_rating(rating, total_games, calib_game_cnt):
   s = str(rating)
-  if total_games < 12:
+  if total_games < calib_game_cnt:
     s += " (?)"
   return s
   
@@ -40,10 +40,10 @@ def _enumerate_info(info):
   for index, playerinfo in enumerate(info):
     playerinfo["position"] = index + 1
 
-def _convert_info_to_ratings(data, info):
+def _convert_info_to_ratings(data, info, prefs):
   rating_rows = []
   for pinfo in info:
-    stringified_rating = _get_str_rating(pinfo["rating"], pinfo["total_games_count"])
+    stringified_rating = _get_str_rating(pinfo["rating"], pinfo["total_games_count"], prefs["calib_games"])
     if pinfo["position"] < len(info):
         runnerup_index = pinfo["position"] # as index = position - 1
         runnerup_login = info[runnerup_index]["name"]
@@ -55,20 +55,20 @@ def _convert_info_to_ratings(data, info):
     rating_rows.append(row)
   return rating_rows
 
-def _stringify(data):
+def _stringify(data, prefs):
   assembled_info = _assemble_general_info(data)
   assembled_info.sort(key = lambda playerinfo: playerinfo["rating"], reverse = True)
   _enumerate_info(assembled_info)
 
-  rows = _convert_info_to_ratings(data, assembled_info)
+  rows = _convert_info_to_ratings(data, assembled_info, prefs)
   return tabulate(rows, headers = table_headers)
 
-def print_table(data):
-    print(_stringify(data))
+def print_table(data, prefs):
+    print(_stringify(data, prefs))
 
-def export_table(data):
+def export_table(data, prefs):
     with open(_export_filename(), "w") as f:
-        f.write(_stringify(data))
+        f.write(_stringify(data, prefs))
 
 def print_matchups_of_player(data, player_login):
   playerinfo = data.get(player_login)

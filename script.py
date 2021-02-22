@@ -4,9 +4,12 @@ import mutator
 import writer
 import help
 import copy
+import os.path
 
 significant_commands = ["setmatchups", "aftermatch", "remove", "merge", "deactivate", "reactivate"]
 data = {}
+prefs = {}
+
 previous_data = None
 
 def undo():
@@ -29,15 +32,15 @@ def undo():
 
 def use_command(inp):
   if inp[0] == "displayrating":
-    writer.print_table(data)
+    writer.print_table(data, prefs)
   elif inp[0] == "exportrating":
-    writer.export_table(data)
+    writer.export_table(data, prefs)
   elif inp[0] == "matchups":
     writer.print_matchups_of_player(data, inp[1].lower())
   elif inp[0] == "setmatchups":
     return mutator.set_matchup(data, inp[1].lower(), inp[2].lower(), int(inp[3]), int(inp[4]), int(inp[5]))
   elif inp[0] == "aftermatch":
-    return mutator.save_match_results(data, inp[1].lower(), inp[2].lower(), inp[3].lower())
+    return mutator.save_match_results(data, inp[1].lower(), inp[2].lower(), inp[3].lower(), prefs)
   elif inp[0] == "remove":
     return mutator.remove_player(data, inp[1].lower())
   elif inp[0] == "merge":
@@ -49,6 +52,14 @@ def use_command(inp):
   elif inp[0] == "undo":
     undo()
   return True
+
+if not os.path.isfile("prefs.json"):
+  prefs = {"calib_games": 12}
+  with open("prefs.json", "w") as f:
+    json.dump(prefs, f)
+else:
+  with open("prefs.json", "r") as f:
+    prefs = json.load(f)
 
 with open("data.json", "r") as f:
   data = json.load(f)

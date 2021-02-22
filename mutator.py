@@ -12,8 +12,9 @@ def _opposite_outcome(outcome):
     else:
         return "d"
 
-def _reward(r1, r2, sa, totalGames):
-  return math.floor(16 * max(25 - 2*totalGames, 1) * (sa - 1 / (1 + 10**((r2-r1)/400))))
+def _reward(r1, r2, sa, totalGames, calib_game_cnt):
+  gamma = 24 / calib_game_cnt
+  return math.floor(16 * max(25 - gamma*totalGames, 1) * (sa - 1 / (1 + 10**((r2-r1)/400))))
 
 def new_matchup():
   return {"w": 0, "l": 0, "d": 0}
@@ -71,14 +72,14 @@ def __aftermatch_modify_stats(data, winner_login, loser_login, draw):
     winner_data["wins"] += 1
     loser_data["losses"] += 1
 
-def __aftermatch_modify_rating(data, winner_login, loser_login, draw):
+def __aftermatch_modify_rating(data, winner_login, loser_login, draw, prefs):
   winner_data, loser_data = data.get(winner_login), data.get(loser_login)  
 
   winner_coef = 0.5 if draw else 1  
   loser_coef = 1 - winner_coef
 
-  winner_data["rating"] += _reward(winner_data["rating"], loser_data["rating"], winner_coef, playerinfoutils.total_games(winner_data))
-  loser_data["rating"] += _reward(loser_data["rating"], winner_data["rating"], loser_coef, playerinfoutils.total_games(loser_data))
+  winner_data["rating"] += _reward(winner_data["rating"], loser_data["rating"], winner_coef, playerinfoutils.total_games(winner_data), prefs["calib_games"])
+  loser_data["rating"] += _reward(loser_data["rating"], winner_data["rating"], loser_coef, playerinfoutils.total_games(loser_data), prefs["calib_games"])
 
   print("Rating changed. The new values are: ")
   print(tabulate([[winner_login, winner_data["rating"]], [loser_login, loser_data["rating"]]]))
@@ -99,7 +100,7 @@ def __aftermatch_confirm_player_exists(data, login):
       return False
   return True
 
-def save_match_results(data, login1, login2, outcome):
+def save_match_results(data, login1, login2, outcome, prefs):
   if not __aftermatch_confirm_player_exists(data, login1):
     return False
   if not __aftermatch_confirm_player_exists(data, login2):
@@ -113,7 +114,7 @@ def save_match_results(data, login1, login2, outcome):
 
   __aftermatch_modify_matchup(data, winner_login, loser_login, draw)
   __aftermatch_modify_stats(data, winner_login, loser_login, draw)
-  __aftermatch_modify_rating(data, winner_login, loser_login, draw)
+  __aftermatch_modify_rating(data, winner_login, loser_login, draw, prefs)
 
   dump(data)
   return True
